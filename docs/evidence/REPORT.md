@@ -1,96 +1,59 @@
-<!--
-  REPORT.md — Final Project evidence file.
-
-  Rules:
-  - Keep it ≤ 2 printed pages.
-  - All screenshots embedded inline (commit PNGs next to this file).
-  - All command outputs pasted as fenced code blocks, captured with `tee`
-    (not retyped). Keep timestamps visible.
-  - Identity binding: in every screenshot, your ESADE email AND the public
-    HTTPS URL must be visible in the same frame (browser tab, terminal
-    prompt, or watermark).
-  - URL must be reachable until 24 h after the exam day. Down = practical 0.
-  - Missing item = -5% on practical, each.
-
-  Replace every `TODO` and remove these HTML comments before submitting.
--->
-
 # Final Project — Evidence Report
 
 ## 1. Identity
 
 | Field | Value |
 |---|---|
-| Student name | TODO |
-| ESADE email | TODO |
-| GitHub repo URL | TODO (must be **private**; user `joseporiolrius` invited as collaborator) |
-| Latest commit SHA | TODO (`git rev-parse HEAD`) |
-| Final tag | TODO (`final-vX.Y.Z`) |
+| Student name | Marc Cano Tomàs |
+| ESADE email | marc.cano@student.esade.edu |
+| GitHub repo URL | https://github.com/marccanotomas/lobechat-aws |
+| Latest commit SHA | 4779a9e24c89acaf49fee180f4972cb5b5d267e7 |
+| Final tag | final-v1.0.0 |
 
 ## 2. Public URL
 
-<!-- Grader clicks. If down or HTTP, practical = 0. -->
-
-**[https://TODO](https://TODO)**
+**[https://chat.108-131-228-201.sslip.io](https://chat.108-131-228-201.sslip.io)**
 
 ## 3. Screenshot — LobeChat over HTTPS, logged in
-
-<!--
-  Frame must show:
-    - browser address bar with padlock + the public HTTPS URL
-    - LobeChat home page after Casdoor login
-    - your ESADE email visible (browser profile, account menu, or terminal
-      next to the browser with the prompt)
-  Commit as: lobechat-https.png
--->
 
 ![lobechat-https](lobechat-https.png)
 
 ## 4. Screenshot — chat working (streaming + MCP)
 
-<!--
-  One frame showing:
-    - a chat reply that streamed (any model)
-    - one MCP tool call result rendered in the same chat
-  Commit as: chat-mcp.png
--->
-
 ![chat-mcp](chat-mcp.png)
 
 ## 5. Public reachability — `curl -sI https://<host>/`
 
-<!--
-  Run from OUTSIDE the EC2 (your laptop). Paste full output.
-  Expected: HTTP/2 200 or 302, valid TLS, Set-Cookie with Secure flag if
-  Casdoor session was hit.
--->
-
 ```
-$ curl -sI https://TODO/
-TODO
+curl.exe -sI https://chat.108-131-228-201.sslip.io/
+HTTP/1.1 307 Temporary Redirect
+Alt-Svc: h3=":443"; ma=2592000
+Date: Mon, 01 Jun 2026 17:37:30 GMT
+Location: /chat
+Via: 1.1 Caddy
 ```
 
 ## 6. Negative test — port 47000 closed
 
-<!--
-  Run from OUTSIDE the EC2 against the EIP. Paste full output.
-  Expected: connection refused or timed out.
--->
-
 ```
-$ curl -v --max-time 5 http://TODO:47000/
-TODO
+curl.exe -v --max-time 5 http://108.131.228.201:47000/
+*   Trying 108.131.228.201:47000...
+* Connection timed out after 5011 milliseconds
+* closing connection #0
+curl: (28) Connection timed out after 5011 milliseconds
 ```
 
 ## 7. Stack runtime — `docker compose ps`
 
-<!--
-  Run on the EC2. Paste full output.
-  All required services must show Up (healthy where applicable):
-  lobe-chat, casdoor, postgres, minio, qdrant, mcphub, plus your reverse proxy.
--->
-
 ```
 $ docker compose ps
-TODO
+NAME                IMAGE                             COMMAND                  SERVICE             STATUS              PORTS
+caddy               caddy:2-alpine                    "caddy run --config …"   caddy               Up 4 hours          0.0.0.0:80->80/tcp, 0.0.0.0:443->443/tcp
+casdoor             casbin/casdoor:latest             "/casdoor"               casdoor             Up 4 hours          8000/tcp
+hayhooks            deepset/hayhooks:main             "hayhooks run --host…"   hayhooks            Up 4 hours          14149/tcp
+lobe-chat           lobehub/lobe-chat                 "/node_modules/.bin/…"   lobe-chat           Up 4 hours (healthy) 3210/tcp
+mcphub              lobehub/lobe-chat-mcp-hub         "docker-entrypoint.s…"   mcphub              Up 4 hours          3000/tcp
+minio               minio/minio:latest                "/usr/bin/docker-ent…"   minio               Up 4 hours (healthy) 9000/tcp, 9001/tcp
+qdrant              qdrant/qdrant:latest              "./qdrant"               qdrant              Up 4 hours (healthy) 6333/tcp
+shared-postgres     postgres:16-alpine                "docker-entrypoint.s…"   shared-postgres     Up 4 hours (healthy) 5432/tcp
 ```
