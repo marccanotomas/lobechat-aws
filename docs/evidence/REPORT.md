@@ -5,7 +5,7 @@
 | Field | Value |
 |---|---|
 | Student name | Marc Cano Tomàs |
-| ESADE email | marc.cano@student.esade.edu |
+| ESADE email | marc.cano1@alumni.esade.edu |
 | GitHub repo URL | https://github.com/marccanotomas/lobechat-aws |
 | Latest commit SHA | 4779a9e24c89acaf49fee180f4972cb5b5d267e7 |
 | Final tag | final-v1.0.0 |
