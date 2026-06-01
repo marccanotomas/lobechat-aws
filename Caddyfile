@@ -1,0 +1,11 @@
+chat.108-131-228-201.sslip.io {
+    reverse_proxy lobe-chat:3210
+}
+
+auth.108-131-228-201.sslip.io {
+    reverse_proxy casdoor:8000
+}
+
+s3.108-131-228-201.sslip.io {
+    reverse_proxy minio:9000
+}
