@@ -72,7 +72,7 @@ jobs:
 
       # Gate f: Escaneig de vulnerabilitats (fs) i desconfiguracions (config) amb Trivy
       - name: Trivy Vulnerability Scan (fs mode)
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.20.0
         continue-on-error: true
         with:
           scan-type: 'fs'
@@ -80,7 +80,7 @@ jobs:
           format: 'table'
 
       - name: Trivy Misconfiguration Scan (config mode)
-        uses: aquasecurity/trivy-action@0.20.0
+        uses: aquasecurity/trivy-action@v0.20.0
         continue-on-error: true
         with:
           scan-type: 'config'
