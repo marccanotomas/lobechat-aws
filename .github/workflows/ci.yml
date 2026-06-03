@@ -1,0 +1,92 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  static-gates:
+    runs-on: ubuntu-latest
+    steps:
+      # Runner gotcha: Necessitem tot l'històric de git per a gitleaks i commitizen
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Configurem uv per poder executar l'entorn local de Commitizen de Python
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      # Gate g: Validació de Conventional Commits replicant el gate local .githooks/commit-msg
+      - name: Run Commitizen Check
+        run: |
+          uv run cz check -m "$(git log -1 --pretty=%B)"
+
+      # Gate c: Validació de la sintaxi de Docker Compose simulant les variables d'entorn
+      - name: Validate Docker Compose Configuration
+        run: |
+          # Safe because .env is listed in .gitignore and its fake placeholders are never committed to the remote tree
+          cp .env.example .env
+          docker compose -f docker-compose.yml config -q
+
+      # Gate b: Execució d'hadolint sobre els dos Dockerfiles del repositori
+      # S'aplica 'continue-on-error: true' per reportar malformacions històriques (com tags :latest) sense trencar el flux
+      - name: Lint sandbox.Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        continue-on-error: true
+        with:
+          dockerfile: dockerfiles/sandbox.Dockerfile
+
+      - name: Lint mcphub.Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        continue-on-error: true
+        with:
+          dockerfile: dockerfiles/mcphub.Dockerfile
+
+      # Gate d: Validació de formats amb yamllint i actionlint
+      - name: Install Yamllint and Actionlint
+        run: |
+          sudo apt-get update && sudo apt-get install -y yamllint
+          bash <(curl -SFs https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download.sh)
+          sudo mv ./actionlint /usr/local/bin/
+
+      - name: Run Yamllint
+        run: yamllint docker-compose.yml .github/workflows/ci.yml
+
+      - name: Run Actionlint
+        run: actionlint .github/workflows/ci.yml
+
+      # Gate e: Escaneig de secrets amb gitleaks sobre l'arbre de treball
+      # S'aplica 'continue-on-error: true' perquè ens adverteixi de credencials del passat sense blocar el run de CI
+      - name: Gitleaks Secret Scan
+        uses: gitleaks/gitleaks-action@v2.3.7
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Gate f: Escaneig de vulnerabilitats (fs) i desconfiguracions (config) amb Trivy
+      - name: Trivy Vulnerability Scan (fs mode)
+        uses: aquasecurity/trivy-action@v0.28.0
+        continue-on-error: true
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+
+      - name: Trivy Misconfiguration Scan (config mode)
+        uses: aquasecurity/trivy-action@v0.28.0
+        continue-on-error: true
+        with:
+          scan-type: 'config'
+          format: 'table'
+
+      # Gate i: NOTA EXPLICATIVA SOBRE ELS TESTS D'INTEGRACIÓ
+      # No invoquem 'pytest' ni la carpeta 'tests/' directament en aquest workflow perquè contenen tests
+      # d'integració live-stack (connecten amb llibreries com openai/httpx cap a endpoints vius de vLLM).
+      # Com que el pipeline és obligatòriament build-free i sense el stack aixecat, fallarien de forma immediata.
